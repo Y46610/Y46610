@@ -51,7 +51,7 @@ async def handle_dialogue(websocket, path):
 """
  使用websockets模块创建一个WebSocket服务器，并将其绑定到本地主机和端口8765
 第一个参数为异步函数 handle_dialogue
-第二个参数是ip地址，比如本地环回地址，或者你的云服务器公网IP
+第二个参数是ip地址，比如本地环回地址“127.0.0.1”，如果要部署到阿里云、腾讯云之类的，改成“0.0.0.0”
 第三个参数是缓冲区大小
 """
 start_server = websockets.serve(handle_dialogue, 'localhost', 8765,max_size=100)
