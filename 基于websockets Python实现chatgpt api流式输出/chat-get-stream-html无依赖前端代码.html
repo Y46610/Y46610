@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>WebSocket Demo</title>
+</head>
+<body>
+	<div class="container">
+		<textarea class="t1" placeholder="请输入您的问题" id="message"></textarea>
+		<div class="bt">
+			<button type="button" id="generateText">提问</button>
+		</div>
+		<div class="input_text" style="margin-top: 30px;padding: 30px;">
+			<div class="div2" id="chatLog"></div>
+		</div>
+	</div>
+	
+	<script>
+		// 定义全局变量和函数
+		var socket = null;
+		var chatLog = [];
+		var startTime = null;
+		var endTime = null;
+
+		function connectWebSocket() {
+			socket = new WebSocket("ws://localhost:8765");
+
+			socket.onopen = function() {
+				console.log("WebSocket连接已打开");
+			};
+
+			socket.onmessage = function(event) {
+				var data = JSON.parse(event.data);
+				socket.send(JSON.stringify({}));
+
+				var content = data.text;
+				if (content.content) {
+					chatLog.push(content.content);
+					renderChatLog();
+				}
+			};
+		}
+
+		function generateText() {
+			console.log("开始发起请求：" + new Date()); // 记录开始时间
+			chatLog = [];
+			socket.send(JSON.stringify({
+				dialogues: [{
+					role: "user",
+					content: document.getElementById("message").value,
+				}],
+			}));
+		}
+
+		function closeWebSocket() {
+			socket.close();
+			console.log("WebSocket连接已关闭");
+		}
+
+		function renderChatLog() {
+			document.getElementById("chatLog").innerHTML = chatLog.join(" ");
+		}
+
+		// 在页面加载时调用函数
+		window.onload = function() {
+			connectWebSocket();
+
+			document.getElementById("generateText").addEventListener("click", function() {
+				generateText();
+			});
+
+			window.onbeforeunload = function() {
+				closeWebSocket();
+			};
+		};
+	</script>
+</body>
+</html>
+
+<style>
+	.container {
+		font-size: 14px;
+		line-height: 24px;
+		width: 100vw;
+		height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+	}
+
+    .t1{
+		width: calc(74vw - 60px);
+		height: 30vh;
+		margin: 0 auto;
+        padding: 30rpx;
+    }
+	.bt {
+		margin: 0 auto;
+		width: 70vw;
+		margin-top: 30px;
+	}
+    .bt button{
+        margin: 0 auto;
+		width: 70vw;
+        height: 50px;
+		margin-top: 30px;
+    }
+    .input_text{
+        padding: 30rpx;
+		width: calc(70vw - 60px) ;
+		height: 30vh;
+		margin: 0 auto;
+		border: 1px solid #000000;
+		border-radius: 10rpx;
+    }
+</style>
+	<script>
+		new Vue({
+			el: "#app",
+			data() {
+				return {
+					socket: null,
+					message: "",
+					chatLog: [],
+					startTime: null,
+					endTime: null
+				}
+			},
+			created() {
+				this.socket = new WebSocket("ws://localhost:8765");
+				this.socket.addEventListener('open', () => {
+					console.log("WebSocket连接已打开");
+				});
+				this.socket.addEventListener('message', (res) => {
+					const data = JSON.parse(res.data);
+					this.socket.send(JSON.stringify({}));
+					let content = data.text
+					if (content.content) {
+						this.chatLog.push(content.content)
+					}
+				});
+			},
+			methods: {
+				generateText() {
+					console.log("开始发起请求：" + new Date()) // 记录开始时间
+					this.chatLog = []
+					this.socket.send(JSON.stringify({
+						dialogues: [{
+							role: "user",
+							content: this.message,
+						}],
+					}));
+				},
+				closeSocket() {
+					this.socket.close();
+					console.log("WebSocket连接已关闭");
+				},
+			},
+			beforeDestroy() {
+				this.closeSocket();
+			},
+			computed: {
+				formattedLog() {
+					// 将 chatLog 数组格式化为可渲染的数组
+					return this.chatLog.map(log => {
+						return {
+							role: log.role,
+							content: typeof log.content === 'string' ? log.content : JSON.stringify(log.content),
+						}
+					})
+				},
+				timeDiff() {
+					if (this.startTime && this.endTime) {
+						// 计算时间差，以秒为单位
+						return (this.endTime - this.startTime) / 1000;
+					} else {
+						return 0;
+					}
+				}
+			},
+			watch: {
+				chatLog: function(newVal, oldVal) {
+					if (newVal.length === 1) {
+						this.startTime = new Date(); // 第一条消息，记录开始时间
+					}
+					if (newVal.length > 0 && newVal.length === oldVal.length) {
+						this.endTime = new Date(); // 最后一条消息接收完毕，记录结束时间
+						console.log(`时间差为 ${this.timeDiff} 秒`);
+					}
+				},
+			}
+		});
+	</script>
+</body>
+</html>

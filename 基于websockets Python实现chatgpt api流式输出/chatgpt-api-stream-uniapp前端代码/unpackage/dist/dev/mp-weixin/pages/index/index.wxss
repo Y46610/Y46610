@@ -1,0 +1,21 @@
+
+.container {
+	font-size: 14px;
+	line-height: 24px;
+	width: 100vw;
+	height: 100vh;
+}
+.input_text {
+	padding: 30rpx;
+	width: 70vw;
+	height: 30vh;
+	margin: 0 auto;
+	border: 1px solid #000000;
+	border-radius: 10rpx;
+}
+.bt {
+	margin: 0 auto;
+	width: calc(70vw + 60rpx);
+	margin-top: 30rpx;
+}
+
